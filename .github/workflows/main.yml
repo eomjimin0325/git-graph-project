@@ -3,47 +3,43 @@ name: Node.js CI/CD to EC2
 on:
   push:
     branches:
-      - master # 혹은 main
+      - master # 또는 main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18.x'
-    - name: Install dependencies
-      run: npm install
-      
-    # 배포 단계는 CodeDeploy 설정 후에 추가됩니다.
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+      - name: Install dependencies
+        run: npm install
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ap-northeast-2 # 서울 리전으로 설정
-# ... (Configure AWS credentials 스텝 이후)
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2 # 서울 리전 설정
 
-- name: Generate deployment package (배포 파일 압축)
-  run: zip -r deploy.zip . -x "*.git*"
+      - name: Generate deployment package (배포 파일 압축)
+        run: zip -r deploy.zip . -x "*.git*"
 
-- name: Upload to S3 (S3에 업로드)
-  run: aws s3 cp deploy.zip s3://[S3 버킷 이름]/deploy.zip
+      - name: Upload to S3 (S3에 업로드)
+        run: aws s3 cp deploy.zip s3://jimin-nodejs-deploy-20251129/deploy.zip
 
-- name: Deploy to EC2 with CodeDeploy (CodeDeploy로 배포 요청)
-  id: deploy
-  uses: aws-actions/aws-codedeploy-action@v1
-  with:
-    application-name: My-Nodejs-App # 5단계에서 생성한 애플리케이션 이름
-    deployment-group-name: My-Nodejs-Deployment-Group # 5단계에서 생성한 배포 그룹 이름
-    s3-location: s3://[S3 버킷 이름]/deploy.zip
-    wait-for-deployment: true
-    # 실제 S3 업로드 및 EC2 CodeDeploy 배포 로직이 이 아래에 들어갑니다.
+      - name: Deploy to EC2 with CodeDeploy (CodeDeploy로 배포 요청)
+        id: deploy
+        uses: aws-actions/aws-codedeploy-action@v1
+        with:
+          application-name: My-Nodejs-App
+          deployment-group-name: My-Nodejs-Deployment-Group
+          s3-location: s3://jimin-nodejs-deploy-20251129/deploy.zip
+          wait-for-deployment: true
