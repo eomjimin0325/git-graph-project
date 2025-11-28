@@ -30,5 +30,20 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-northeast-2 # 서울 리전으로 설정
+# ... (Configure AWS credentials 스텝 이후)
 
+- name: Generate deployment package (배포 파일 압축)
+  run: zip -r deploy.zip . -x "*.git*"
+
+- name: Upload to S3 (S3에 업로드)
+  run: aws s3 cp deploy.zip s3://[S3 버킷 이름]/deploy.zip
+
+- name: Deploy to EC2 with CodeDeploy (CodeDeploy로 배포 요청)
+  id: deploy
+  uses: aws-actions/aws-codedeploy-action@v1
+  with:
+    application-name: My-Nodejs-App # 5단계에서 생성한 애플리케이션 이름
+    deployment-group-name: My-Nodejs-Deployment-Group # 5단계에서 생성한 배포 그룹 이름
+    s3-location: s3://[S3 버킷 이름]/deploy.zip
+    wait-for-deployment: true
     # 실제 S3 업로드 및 EC2 CodeDeploy 배포 로직이 이 아래에 들어갑니다.
