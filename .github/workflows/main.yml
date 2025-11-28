@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master # 또는 main
+      - main
+      - feature
 
 jobs:
   build:
