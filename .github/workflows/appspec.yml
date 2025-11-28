@@ -1,0 +1,11 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ec2-user/app/ # 3단계에서 준비한 배포 경로
+hooks:
+  # 배포가 완료된 후 실행될 스크립트 (Node.js 애플리케이션 실행)
+  ApplicationStart:
+    - location: scripts/start_server.sh
+      timeout: 60
+      runas: ec2-user
